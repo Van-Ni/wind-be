@@ -2,11 +2,11 @@ const router = require("express").Router();
 
 const authController = require("../controllers/authController");
 
-router.get("/test", (req, res)=> {
+router.get("/", (req, res)=> {
     res.json({
-        "hi" : "vanni"
+        "hi" : "hello"
     })
-});
+});f
 router.post("/login", authController.login); 
 
 router.post("/register", authController.register);//authController.sendOTP
