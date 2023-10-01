@@ -6,7 +6,7 @@ router.get("/", (req, res)=> {
     res.json({
         "hi" : "hello"
     })
-});f
+});
 router.post("/login", authController.login); 
 
 router.post("/register", authController.register);//authController.sendOTP
