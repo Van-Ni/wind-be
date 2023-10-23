@@ -59,18 +59,25 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  //   otp: {
-  //     type: String,
-  //   },
-  //   otp_expiry_time: {
-  //     type: Date,
-  //   },
-  //   friends: [
-  //     {
-  //       type: mongoose.Schema.ObjectId,
-  //       ref: "User",
-  //     },
-  //   ],
+  otp: {
+    type: String,
+  },
+  otp_expiry_time: {
+    type: Date,
+  },
+  friends: [
+    {
+      type: mongoose.Schema.ObjectId,
+      ref: "User",
+    },
+  ],
+  socket_id: {
+    type: String
+  },
+  status: {
+    type: String,
+    enum: ["Online", "Offline"]
+  }
 });
 
 const User = mongoose.model('User', userSchema);

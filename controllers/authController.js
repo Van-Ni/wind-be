@@ -212,11 +212,11 @@ exports.protect = async (req, res, next) => {
         });
     }
     // 4) Check if user changed password after the token was issued
-    if (this_user.changedPasswordAfter(decoded.iat)) {
-        return res.status(401).json({
-            message: "User recently changed password! Please log in again.",
-        });
-    }
+    // if (this_user.changedPasswordAfter(decoded.iat)) {
+    //     return res.status(401).json({
+    //         message: "User recently changed password! Please log in again.",
+    //     });
+    // }
 
     // GRANT ACCESS TO PROTECTED ROUTE
     req.user = this_user;
