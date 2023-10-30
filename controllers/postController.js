@@ -35,13 +35,36 @@ exports.createPost = asyncHandler(async (req, res, next) => {
 })
 //show posts
 exports.showPost = asyncHandler(async (req, res, next) => {
-    const posts = await Post.find().sort({ createdAt: -1 })
-        .populate('postedBy', 'firstName lastName avatar');
-    res.status(201).json({
-        success: true,
-        data: posts
-    })
-})
+    try {
+        const { page, limit } = req.pagination;
+        const { sortBy, sortOrder } = req.sorting;
+        const filters = req.filters;
+
+        const startIndex = (page - 1) * limit;
+
+        const query = Post.find(filters)
+            .sort({ [sortBy]: sortOrder })
+            .skip(startIndex)
+            .limit(limit)
+            .populate('postedBy', 'firstName lastName avatar');
+
+        const totalItems = await Post.where(filters).countDocuments();
+        const totalPages = Math.ceil(totalItems / limit);
+
+        const posts = await query.exec();
+
+        res.status(200).json({
+            success: true,
+            page,
+            limit,
+            totalItems,
+            totalPages,
+            data: posts,
+        });
+    } catch (error) {
+        next(error);
+    }
+});
 //show single post
 exports.showSinglePost = asyncHandler(async (req, res, next) => {
     try {
@@ -137,7 +160,8 @@ exports.addLike = asyncHandler(async (req, res, next) => {
     })
 })
 
-exports.removeLike = async (req, res, next) => {
+//remove like
+exports.removeLike =asyncHandler(async (req, res, next) => {
 
     try {
         const post = await Post.findByIdAndUpdate(req.params.id, {
@@ -145,7 +169,7 @@ exports.removeLike = async (req, res, next) => {
         },
             { new: true }
         );
-
+        main.io.emit('removelike', post);
         // const posts = await Post.find().sort({ createdAt: -1 }).populate('postedBy', 'name');
 
         res.status(200).json({
@@ -157,4 +181,4 @@ exports.removeLike = async (req, res, next) => {
         next(error);
     }
 
-}
+})

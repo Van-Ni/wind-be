@@ -1,46 +1,57 @@
-const app = require('./app')
-const mongoose = require('mongoose');
-require('dotenv').config({ path: "./config.env" })
+const mongoose = require("mongoose");
+const dotenv = require("dotenv");
+const multer = require('multer');
+const path = require('path')
+dotenv.config({ path: "./config.env" });
 
 process.on("uncaughtException", (err) => {
-  process.on("uncaughtException", (err) => {
-    console.log(err);
-    console.log("UNCAUGHT Exception! Shutting down ...");
-    process.exit(1); // Exit Code 1 indicates that a container shut down, either because of an application failure.
-  });
-})
-
-
-const http = require("http");
-const User = require("./models/user");
-const FriendRequest = require("./models/friendRequest");
-const port = process.env.PORT || 5000;
-//=======================================
-// Mongoose
-//=======================================
-mongoose.connect(process.env.DATABASE).then((conn) => {
-  console.log('DB Connection Successful');
-}).catch((error) => {
-  console.log('Some error has occured');
+  console.log(err);
+  console.log("UNCAUGHT Exception! Shutting down ...");
+  process.exit(1); // Exit Code 1 indicates that a container shut down, either because of an application failure.
 });
 
+const app = require("./app");
 
-//=======================================
-// Socket.io
-//=======================================
+const http = require("http");
 const server = http.createServer(app);
 
-const { Server } = require("socket.io");
-const OneToOneMessage = require('./models/OneToOneMessage');
+const { Server } = require("socket.io"); // Add this
+const User = require("./models/user");
+const FriendRequest = require("./models/friendRequest");
+const OneToOneMessage = require("./models/OneToOneMessage");
 
 // Add this
 // Create an io server and allow for CORS from http://localhost:3000 with GET and POST methods
-io = new Server(server, {
+const io = new Server(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
   },
 });
+
+const DB = process.env.DATABASE.replace(
+  "<PASSWORD>",
+  process.env.DATABASE_PASSWORD
+);
+
+mongoose
+  .connect(process.env.DATABASE, {
+    // useNewUrlParser: true, // The underlying MongoDB driver has deprecated their current connection string parser. Because this is a major change, they added the useNewUrlParser flag to allow users to fall back to the old parser if they find a bug in the new parser.
+    // useCreateIndex: true, // Again previously MongoDB used an ensureIndex function call to ensure that Indexes exist and, if they didn't, to create one. This too was deprecated in favour of createIndex . the useCreateIndex option ensures that you are using the new function calls.
+    // useFindAndModify: false, // findAndModify is deprecated. Use findOneAndUpdate, findOneAndReplace or findOneAndDelete instead.
+    // useUnifiedTopology: true, // Set to true to opt in to using the MongoDB driver's new connection management engine. You should set this option to true , except for the unlikely case that it prevents you from maintaining a stable connection.
+  })
+  .then((con) => {
+    console.log("DB Connection successful");
+  });
+
+const port = process.env.PORT || 8000;
+
+server.listen(port, () => {
+  console.log(`App running on port ${port} ...`);
+});
+
+
 
 io.on("connection", async (socket) => { // Fired upon a connection from client.
   //https://socket.io/docs/v3/client-initialization/#query
@@ -153,16 +164,16 @@ io.on("connection", async (socket) => { // Fired upon a connection from client.
         "participants",
         "firstName lastName _id email status"
       );
-      console.log("new chat",new_chat);
+      console.log("new chat", new_chat);
       socket.emit("start_chat", new_chat);
     }
     // if yes => just emit event "start_chat" & send conversation details as payload
     else {
-      console.log("existing_conversations[0])",existing_conversations[0]);
+      console.log("existing_conversations[0])", existing_conversations[0]);
       socket.emit("start_chat", existing_conversations[0]);
     }
   });
-  
+
   socket.on("get_messages", async (data, callback) => {
     try {
       const { messages } = await OneToOneMessage.findById(
@@ -217,9 +228,28 @@ io.on("connection", async (socket) => { // Fired upon a connection from client.
 
   // handle Media/Document Message
   socket.on("file_message", (data) => {
-    console.log("Received message:", data);
+    // Cấu hình Multer
+    const storage = multer.diskStorage({
+      destination: path.join(__dirname, "uploads"),
+      filename: function (req, file, cb) {
+        // generate the public name, removing problematic characters
+        cb(null, new Date().getTime() + path.extname(file.originalname))
+      }
+    });
+    const upload = multer({ storage });
 
     // data: {to, from, text, file}
+    const { formData, conversation_id, from, to, type } = data;
+
+    upload.single('file')(formData, null, (error) => {
+      if (error) {
+        console.log('Error uploading file:', error);
+        callback({ success: false, message: 'Error uploading file' });
+      } else {
+        console.log('File uploaded successfully');
+        callback({ success: true, message: 'File uploaded successfully' });
+      }
+    });
 
     // Get the file extension
     const fileExtension = path.extname(data.file.name);
@@ -260,11 +290,6 @@ io.on("connection", async (socket) => { // Fired upon a connection from client.
 })
 
 exports.io = io;
-
-server.listen(port, () => {
-  console.log(`App running on port ${port} ...`);
-})
-
 
 
 process.on("unhandledRejection", (err) => {

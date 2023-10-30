@@ -21,7 +21,7 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}\\server.js",
+            "program": "${workspaceFolder}\\index.js",
             "restart": true
         }
     ]

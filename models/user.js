@@ -3,6 +3,9 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
 const userSchema = new mongoose.Schema({
+  authId: {
+    type: String,
+  },
   firstName: {
     type: String,
     required: [true, "First Name is required"],
@@ -54,6 +57,9 @@ const userSchema = new mongoose.Schema({
   updatedAt: {
     // unselect
     type: Date,
+  },
+  refreshToken: {
+    type: String,
   },
   verified: {
     type: Boolean,
@@ -119,9 +125,9 @@ userSchema.methods.correctPassword = async function (
   return await bcrypt.compareSync(candidatePassword, userPassword);
 };
 
-userSchema.methods.correctOTP = async function (candidateOTP, userOTP) {
-  return await bcrypt.compare(candidateOTP, userOTP);
-};
+// userSchema.methods.correctOTP = async function (candidateOTP, userOTP) {
+//   return await bcrypt.compare(candidateOTP, userOTP);
+// };
 // userSchema.methods.createPasswordResetToken = function () {
 //   const resetToken = crypto.randomBytes(32).toString("hex");
 
@@ -134,7 +140,11 @@ userSchema.methods.correctOTP = async function (candidateOTP, userOTP) {
 
 //   return resetToken;
 // };
-
+userSchema.methods = {
+  correctOTP: async function (candidateOTP, userOTP) {
+    return await bcrypt.compare(candidateOTP, userOTP);
+  }
+}
 userSchema.methods.changedPasswordAfter = function (JWTTimeStamp) {
   if (this.passwordChangedAt) {
     const changedTimeStamp = parseInt(
