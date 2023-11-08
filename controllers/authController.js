@@ -95,6 +95,10 @@ exports.register = asyncHandler(async (req, res, next) => {
 
         // generate an otp and send to email
         req.userId = existing_user._id;
+        return res.status(400).json({
+            status: "error",
+            message: "Email already in use, Please login.",
+        });
         next();
     }
     else {
@@ -105,17 +109,17 @@ exports.register = asyncHandler(async (req, res, next) => {
         const new_user = await User.create(filteredBody);
 
         req.userId = new_user._id;
-        // return res.status(201).json({
-        //     status: "success",
-        //     message: "Registered successfully",
-        // });
+        return res.status(201).json({
+            status: true,
+            message: "Registration Success.",
+        });
         next();
     }
 });
 //===============
 //sendOTP
 //===============
-exports.sendOTP = async (req, res, next) => {
+exports.sendOTP = asyncHandler(async (req, res, next) => {
     const { userId } = req;
     const new_otp = otpGenerator.generate(6, {
         upperCaseAlphabets: false,
@@ -146,7 +150,7 @@ exports.sendOTP = async (req, res, next) => {
         message: "OTP Sent Successfully!",
         rs
     });
-};
+});
 
 //===============
 //verifyOTP

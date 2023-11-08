@@ -2,14 +2,14 @@ const cloudinary = require("../utils/cloudinary");
 const Post = require("../models/post");
 const filterObj = require("../utils/filterObj");
 const asyncHandler = require('express-async-handler')
-const fs = require('fs');
+// const fs = require('fs');
 const main = require("../index");
 //create post
 exports.createPost = asyncHandler(async (req, res, next) => {
     const { content } = req.body;
-    const image = req.file.path
+    const file = req.file.path
     //upload image in cloudinary
-    const result = await cloudinary.uploader.upload(image, {
+    const result = await cloudinary.uploader.upload(file, {
         folder: "posts",
         width: 1200,
         crop: "scale"
@@ -23,10 +23,10 @@ exports.createPost = asyncHandler(async (req, res, next) => {
         },
 
     });
-    await fs.unlink(image, function (err) {
-        if (err) throw err;
-        console.log('delete');
-    });
+    // await fs.unlink(file, function (err) {
+    //     if (err) throw err;
+    //     console.log('delete');
+    // });
 
     res.status(201).json({
         success: true,

@@ -1,7 +1,7 @@
 const express = require("express"); // web framework for Node.js.
 const morgan = require("morgan"); // HTTP request logger middleware for node.js
 const routes = require("./routes/index");
-const path = require('path')
+// const path = require('path')
 const { notFound, errHandler } = require('./middlewares/errHandler')
 const queryMiddleware = require('./middlewares/queryMiddleware');
 const rateLimit = require("express-rate-limit"); // Basic rate-limiting middleware for Express. Use to limit repeated requests to public APIs and/or endpoints such as password reset.
@@ -16,8 +16,8 @@ const session = require('express-session')
 // - req.headers
 // - req.query
 const bodyParser = require("body-parser");
-const multer = require('multer')
-const fileUpload = require('express-fileupload');
+// const multer = require('multer')
+// const fileUpload = require('express-fileupload');
 //cho phép các yêu cầu từ các domain khác có thể truy cập vào các tài nguyên của bạn
 const cors = require("cors"); // CORS is a node.js package for providing a Connect/Express middleware that can be used to enable CORS with various options.
 
@@ -66,14 +66,14 @@ app.use(bodyParser.json())
 //================================================================
 // upload file
 //================================================================
-const storage = multer.diskStorage({
-    destination: path.join(__dirname,"uploads"),
-    filename: function (req, file, cb) {
-        // generate the public name, removing problematic characters
-        cb(null, new Date().getTime() + path.extname(file.originalname))
-    }
-})
-app.use(multer({storage}).single("file"));
+// const storage = multer.diskStorage({
+//     destination: path.join(__dirname,"uploads"),
+//     filename: function (req, file, cb) {
+//         // generate the public name, removing problematic characters
+//         cb(null, new Date().getTime() + file.originalname) //path.extname(file.originalname)
+//     }
+// })
+// app.use(multer({storage}).single("file"));
 
 
 if (process.env.NODE_ENV == "development") {

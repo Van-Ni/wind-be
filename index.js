@@ -197,7 +197,7 @@ io.on("connection", async (socket) => { // Fired upon a connection from client.
 
     // message => {to, from, type, created_at, text, file}
 
-    const new_message = {
+    let new_message = {
       to: to,
       from: from,
       type: type,
@@ -211,8 +211,10 @@ io.on("connection", async (socket) => { // Fired upon a connection from client.
     // save to db`
     await chat.save({ new: true, validateModifiedOnly: true });
 
-    // emit incoming_message -> to user
+    // Lấy message ID
+    new_message._id = chat.messages[chat.messages.length - 1]._id;
 
+    // emit incoming_message -> to user
     io.to(to_user?.socket_id).emit("new_message", {
       conversation_id,
       message: new_message,
