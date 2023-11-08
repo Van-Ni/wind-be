@@ -2,7 +2,7 @@ const cloudinary = require("../utils/cloudinary");
 const Post = require("../models/post");
 const filterObj = require("../utils/filterObj");
 const asyncHandler = require('express-async-handler')
-// const fs = require('fs');
+const fs = require('fs');
 const main = require("../index");
 //create post
 exports.createPost = asyncHandler(async (req, res, next) => {
@@ -23,10 +23,10 @@ exports.createPost = asyncHandler(async (req, res, next) => {
         },
 
     });
-    // await fs.unlink(file, function (err) {
-    //     if (err) throw err;
-    //     console.log('delete');
-    // });
+    await fs.unlink(file, function (err) {
+        if (err) throw err;
+        console.log('delete');
+    });
 
     res.status(201).json({
         success: true,

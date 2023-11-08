@@ -4,7 +4,7 @@ const FriendRequest = require("../models/friendRequest");
 const filterObj = require("../utils/filterObj");
 const cloudinary = require("../utils/cloudinary");
 const asyncHandler = require('express-async-handler')
-// const fs = require('fs');
+const fs = require('fs');
 const http = require('http');
 const path = require('path')
 const main = require("../index");
@@ -104,10 +104,10 @@ exports.fileMessage = asyncHandler(async (req, res, next) => {
             width: 1200,
             crop: "scale"
         })
-        // await fs.unlink(file, function (err) {
-        //     if (err) throw err;
-        //     console.log('delete');
-        // });
+        await fs.unlink(file, function (err) {
+            if (err) throw err;
+            console.log('delete');
+        });
     }
     const to_user = await User.findById(to);
     const from_user = await User.findById(from);
