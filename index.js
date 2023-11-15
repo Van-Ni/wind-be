@@ -203,6 +203,10 @@ io.on("connection", async (socket) => { // Fired upon a connection from client.
       type: type,
       created_at: Date.now(),
       text: message,
+      receiverUser: {
+        name: `${to_user.firstName} ${to_user.lastName}`,
+        //TODO :
+      }
     };
 
     // fetch OneToOneMessage Doc & push a new message to existing conversation
