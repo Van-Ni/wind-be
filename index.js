@@ -96,14 +96,10 @@ io.on("connection", async (socket) => { // Fired upon a connection from client.
    */
   socket.on("accept_request", async (data) => {
     // accept friend request => add ref of each other in friends array
-    console.log(data);
     const request_doc = await FriendRequest.findById(data.request_id);
-
-    console.log("request_doc", request_doc);
 
     const sender = await User.findById(request_doc.sender);
     const receiver = await User.findById(request_doc.recipient);
-
 
     sender.friends.push(request_doc.recipient);
     receiver.friends.push(request_doc.sender);
@@ -130,20 +126,13 @@ io.on("connection", async (socket) => { // Fired upon a connection from client.
       participants: { $all: [user_id] },
     }).populate("participants", "firstName lastName avatar _id email status");
 
-    // db.books.find({ authors: { $elemMatch: { name: "John Smith" } } })
-
     console.log("get_direct_conversations", existing_conversations);
-
     callback(existing_conversations);
   });
 
   socket.on("start_conversation", async (data) => {
-    // data: {to: from:}
-
     const { to, from } = data;
-
     // check if there is any existing conversation
-
     /**
      * https://www.mongodb.com/docs/manual/reference/operator/query/size/
      * https://www.mongodb.com/docs/manual/reference/operator/query/all/
@@ -151,8 +140,6 @@ io.on("connection", async (socket) => { // Fired upon a connection from client.
     const existing_conversations = await OneToOneMessage.find({
       participants: { $size: 2, $all: [to, from] },
     }).populate("participants", "firstName lastName _id email status");
-
-    // console.log("Existing Conversation",existing_conversations[0]);
 
     // if no => create a new OneToOneMessage doc & emit event "start_chat" & send conversation details as payload
     if (existing_conversations.length === 0) {
@@ -208,6 +195,14 @@ io.on("connection", async (socket) => { // Fired upon a connection from client.
         //TODO :
       }
     };
+
+    /** TODO
+     * @Feature : Notification
+     * Handle update notification
+     * send notification
+     */
+    
+
 
     // fetch OneToOneMessage Doc & push a new message to existing conversation
     const chat = await OneToOneMessage.findById(conversation_id);

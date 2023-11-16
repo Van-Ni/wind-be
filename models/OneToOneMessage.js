@@ -7,6 +7,12 @@ const oneToOneMessageSchema = new mongoose.Schema({
       ref: "User",
     },
   ],
+  notifications: [
+    {
+      type: mongoose.Schema.ObjectId,
+      ref: "Notification",
+    },
+  ],
   messages: [
     {
       to: {
