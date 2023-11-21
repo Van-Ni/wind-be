@@ -19,6 +19,7 @@ const { Server } = require("socket.io"); // Add this
 const User = require("./models/user");
 const FriendRequest = require("./models/friendRequest");
 const OneToOneMessage = require("./models/OneToOneMessage");
+const Notification = require("./models/notification");
 
 // Add this
 // Create an io server and allow for CORS from http://localhost:3000 with GET and POST methods
@@ -124,7 +125,13 @@ io.on("connection", async (socket) => { // Fired upon a connection from client.
   socket.on("get_direct_conversations", async ({ user_id }, callback) => {
     const existing_conversations = await OneToOneMessage.find({
       participants: { $all: [user_id] },
-    }).populate("participants", "firstName lastName avatar _id email status");
+      "notifications.read_by": { $exists: false }
+    })
+      .populate({
+        path: "notifications",
+        match: { "read_by": { $exists: false } },
+        model: "Notification",
+      }).populate("participants", "firstName lastName avatar _id email status");
 
     console.log("get_direct_conversations", existing_conversations);
     callback(existing_conversations);
@@ -198,15 +205,24 @@ io.on("connection", async (socket) => { // Fired upon a connection from client.
 
     /** TODO
      * @Feature : Notification
-     * Handle update notification
-     * send notification
+     * add notification in NotificationSchema
+     * add id notification in oneToOneMessageSchema
      */
-    
+    // Create a new notification
+    const notification = new Notification({
+      sender: from_user._id,
+      receiver: to_user._id,
+      message: `New message from ${from_user.firstName} ${from_user.lastName}`,
+    });
 
+    // Save the notification to the database
+    await notification.save({ new: true });
 
     // fetch OneToOneMessage Doc & push a new message to existing conversation
     const chat = await OneToOneMessage.findById(conversation_id);
     chat.messages.push(new_message);
+    chat.notifications.push(notification._id);
+
     // save to db`
     await chat.save({ new: true, validateModifiedOnly: true });
 
