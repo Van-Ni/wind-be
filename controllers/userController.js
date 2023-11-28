@@ -10,21 +10,41 @@ const path = require('path')
 const main = require("../index");
 const { isImageFile } = require('../utils/validate');
 exports.updateMe = asyncHandler(async (req, res, next) => {
-    const filteredBody = filterObj(
-        req.body,
-        "firstName",
-        "lastName",
-        "about",
-        "avatar"
-    );
+    const { _id } = req.user;
+    const { firstName, lastName } = req.body;
+    const file = req.file.path;
+    const currentUser = await User.findById(_id);
 
-    const userDoc = await User.findByIdAndUpdate(req.user._id, filteredBody);
+    let data = {
+        firstName: firstName || currentUser.firstName,
+        lastName: lastName || currentUser.lastName,
+        avatar: currentUser.avatar,
+    }
+
+    if (file !== '') {
+
+        const ImgId = currentUser.avatar.public_id;
+        if (ImgId) {
+            await cloudinary.uploader.destroy(ImgId);
+        }
+
+        const newImage = await cloudinary.uploader.upload(file, {
+            folder: 'users',
+            width: 1200,
+            crop: "scale"
+        });
+
+        data.avatar = {
+            public_id: newImage.public_id,
+            url: newImage.secure_url
+        }
+    }
+    const userUpdate = await User.findByIdAndUpdate(_id, data, { new: true });
 
     res.status(200).json({
-        status: "success",
-        data: userDoc,
-        message: "User Updated successfully",
-    });
+        success: true,
+        userUpdate
+    })
 })
 
 exports.getMe = asyncHandler(async (req, res, next) => {
@@ -122,7 +142,7 @@ exports.fileMessage = asyncHandler(async (req, res, next) => {
     // fetch OneToOneMessage Doc & push a new message to existing conversation
     const chat = await OneToOneMessage.findById(conversation_id);
     chat.messages.push(new_message);
-    
+
     await chat.save({ new: true, validateModifiedOnly: true });
 
     // Lấy message ID

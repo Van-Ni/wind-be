@@ -8,7 +8,7 @@ const userController = require("../controllers/userController");
 
 router.use(authController.protect);
 
-router.patch("/update-me", userController.updateMe);
+router.put("/update-me", userController.updateMe);
 router.get("/get-me", userController.getMe);
 router.get("/get-users", userController.getUsers);
 router.get("/get-friends", userController.getFriends);

@@ -18,6 +18,6 @@ exports.updateNotification = asyncHandler(async function (req, res, next) {
     message.notifications = [];
     await message.save();
 
-    return res.json({ message: 'Thực hiện thành công các truy vấn Mongoose.' });
+    return res.json({ message: 'Thực hiện thành công' });
 
 });
