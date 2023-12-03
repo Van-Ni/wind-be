@@ -25,8 +25,12 @@ module.exports = function (passport) {
           verified: profile.emails[0].verified,
         }
         try {
-          let user = await User.findOne({ authId: profile.id })
+          let user = await User.findOne({ email: profile.emails[0].value })
           if (user) {
+            user = await User.findOneAndUpdate({ email: profile.emails[0].value }, { authId: profile.id }, {
+              new: true,
+              validateModifiedOnly: true,
+            });
             return done(null, user);
           } else {
             user = await User.create(newUser)
@@ -57,8 +61,12 @@ module.exports = function (passport) {
           verified: profile.id ? true : false,
         }
         try {
-          let user = await User.findOne({ authId: profile.id })
+          let user = await User.findOne({ email: profile._json.email })
           if (user) {
+            user = await User.findOneAndUpdate({ email: profile.emails[0].value }, { authId: profile.id }, {
+              new: true,
+              validateModifiedOnly: true,
+            });
             return done(null, user);
           } else {
             user = await User.create(newUser)
@@ -89,8 +97,12 @@ module.exports = function (passport) {
           verified: profile.id ? true : false,
         }
         try {
-          let user = await User.findOne({ authId: profile.id })
+          let user = await User.findOne({ email: profile._json.email })
           if (user) {
+            user = await User.findOneAndUpdate({ email: profile._json.email }, { authId: profile.id }, {
+              new: true,
+              validateModifiedOnly: true,
+            });
             return done(null, user);
           } else {
             user = await User.create(newUser)
