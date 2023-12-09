@@ -77,20 +77,69 @@ io.on("connection", async (socket) => { // Fired upon a connection from client.
     const to = await User.findById(data.to).select("socket_id");
     const from = await User.findById(data.from).select("socket_id");
 
-    // create a friend request
-    await FriendRequest.create({
+    //TODO :check if FriendRequest is already exists 
+    const existingRequest = await FriendRequest.findOne({
       sender: data.from,
       recipient: data.to,
     });
-    // emit event request received to recipient
-    io.to(from?.socket_id).emit("request_sent", {
-      message: "Request Sent successfully!",
-    });
-    io.to(to?.socket_id).emit("new_friend_request", {
-      message: "New friend request received",
-    });
+    if (existingRequest) {
+      // FriendRequest already exists, notify the sender
+      io.to(from?.socket_id).emit("request_sent", {
+        message: "Friend request already sent!",
+      });
+    } else {
+      // create a friend request
+      await FriendRequest.create({
+        sender: data.from,
+        recipient: data.to,
+      });
+      // emit event request received to recipient
+      io.to(from?.socket_id).emit("request_sent", {
+        message: "Request Sent successfully!",
+      });
+      io.to(to?.socket_id).emit("new_friend_request", {
+        message: "New friend request received",
+      });
+    }
   });
 
+  socket.on("unfriend_request", async (data) => {
+    try {
+      const userId = new mongoose.Types.ObjectId(data.user_id);
+      const friendId = new mongoose.Types.ObjectId(data.friend_id);
+
+      // Find and update the user document
+      // Update friend document and user document in one operation
+      const result = await User.updateMany(
+        {
+          $or: [
+            { _id: friendId, friends: userId },
+            { _id: userId, friends: friendId },
+          ],
+        },
+        { $pull: { friends: { $in: [userId, friendId] } } }
+      );
+
+      // Check if the update was successful
+      if (result.modifiedCount === 0) {
+        socket.emit("request_not_found", {
+          message: "Friend not found in the list of friends",
+        });
+        return;
+      }
+
+      // Emit success event
+      socket.emit("deny_success", {
+        message: "Unfriended successfully",
+      });
+    } catch (error) {
+      console.error(error);
+      // Handle any errors that occurred during the process
+      socket.emit("socket_request_error", {
+        message: "An error occurred while unfriending",
+      });
+    }
+  });
   /**
    * from
    * to
@@ -98,6 +147,14 @@ io.on("connection", async (socket) => { // Fired upon a connection from client.
   socket.on("accept_request", async (data) => {
     // accept friend request => add ref of each other in friends array
     const request_doc = await FriendRequest.findById(data.request_id);
+
+    // Check if request_doc doesn't exist
+    if (!request_doc) {
+      socket.emit("request_not_found", {
+        message: "Friend request not found",
+      });
+      return;
+    }
 
     const sender = await User.findById(request_doc.sender);
     const receiver = await User.findById(request_doc.recipient);
@@ -122,6 +179,22 @@ io.on("connection", async (socket) => { // Fired upon a connection from client.
     });
   });
 
+  socket.on("deny_request", async (data) => {
+    let request_doc = await FriendRequest.findById(data.request_id);
+
+    // Check if request_doc doesn't exist
+    if (!request_doc) {
+      socket.emit("request_not_found", {
+        message: "Friend request not found",
+      });
+      return;
+    }
+    request_doc = await FriendRequest.findByIdAndDelete(data.request_id);
+
+    socket.emit("deny_success", {
+      message: "Deleted successfully",
+    });
+  });
   socket.on("get_direct_conversations", async ({ user_id }, callback) => {
     const existing_conversations = await OneToOneMessage.find({
       participants: { $all: [user_id] },
@@ -148,7 +221,7 @@ io.on("connection", async (socket) => { // Fired upon a connection from client.
       participants: { $size: 2, $all: [to, from] },
     }).populate("participants", "firstName lastName _id email status");
 
-    // if no => create a new OneToOneMessage doc & emit event "start_chat" & send conversation details as payload
+    // no => create a new OneToOneMessage doc & emit event "start_chat" & send conversation details as payload
     if (existing_conversations.length === 0) {
       let new_chat = await OneToOneMessage.create({
         participants: [to, from],
@@ -161,7 +234,7 @@ io.on("connection", async (socket) => { // Fired upon a connection from client.
       console.log("new chat", new_chat);
       socket.emit("start_chat", new_chat);
     }
-    // if yes => just emit event "start_chat" & send conversation details as payload
+    // yes => just emit event "start_chat" & send conversation details as payload
     else {
       console.log("existing_conversations[0])", existing_conversations[0]);
       socket.emit("start_chat", existing_conversations[0]);
