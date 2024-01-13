@@ -57,7 +57,7 @@ exports.getMe = asyncHandler(async (req, res, next) => {
 exports.getUsers = asyncHandler(async (req, res, next) => {
     const all_users = await User.find({
         verified: true,
-    }).select("firstName lastName _id");
+    }).select("firstName lastName _id avatar.url");
 
     const friendRequests = await FriendRequest.find({
         $or: [
@@ -88,7 +88,7 @@ exports.getUsers = asyncHandler(async (req, res, next) => {
 
 exports.getRequests = asyncHandler(async (req, res, next) => {
     const requests = await FriendRequest.find({ recipient: req.user._id })
-        .populate("sender", "_id firstName lastName")
+        .populate("sender", "_id firstName lastName avatar.url")
         .select("_id");
 
     console.log("getRequests", requests);
@@ -101,7 +101,7 @@ exports.getRequests = asyncHandler(async (req, res, next) => {
 })
 
 exports.getFriends = asyncHandler(async (req, res, next) => {
-    const this_user = await User.findById(req.user._id).populate("friends", "_id firstName lastName");
+    const this_user = await User.findById(req.user._id).populate("friends", "_id firstName lastName avatar.url");
 
     res.status(200).json({
         status: "success",
