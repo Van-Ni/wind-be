@@ -12,16 +12,16 @@ const { isImageFile } = require('../utils/validate');
 exports.updateMe = asyncHandler(async (req, res, next) => {
     const { _id } = req.user;
     const { firstName, lastName } = req.body;
-    const file = req.file.path;
+    const file = req?.file?.path;
     const currentUser = await User.findById(_id);
 
     let data = {
         firstName: firstName || currentUser.firstName,
         lastName: lastName || currentUser.lastName,
-        avatar: currentUser.avatar,
+        avatar: currentUser?.avatar,
     }
 
-    if (file !== '') {
+    if (file && file !== undefined) {
 
         const ImgId = currentUser.avatar.public_id;
         if (ImgId) {
