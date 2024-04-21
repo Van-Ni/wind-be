@@ -15,6 +15,15 @@ const { signToken, signRefreshToken } = require("../utils/token");
 //===============
 //User Login
 //===============
+/**
+ *
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+
+const res = pm.response.json(); 
+pm.globals.set("accessToken", res.token);
+ */
 exports.login = asyncHandler(async function (req, res, next) {
     const { email, password } = req.body;
 
@@ -95,10 +104,10 @@ exports.register = asyncHandler(async (req, res, next) => {
 
         // generate an otp and send to email
         req.userId = existing_user._id;
-        return res.status(400).json({
-            status: "error",
-            message: "Email already in use, Please login.",
-        });
+        // return res.status(400).json({
+        //     status: "error",
+        //     message: "Email already in use, Please login.",
+        // });
         next();
     }
     else {
@@ -109,10 +118,10 @@ exports.register = asyncHandler(async (req, res, next) => {
         const new_user = await User.create(filteredBody);
 
         req.userId = new_user._id;
-        return res.status(201).json({
-            status: true,
-            message: "Registration Success.",
-        });
+        // return res.status(201).json({
+        //     status: true,
+        //     message: "Registration Success.",
+        // });
         next();
     }
 });
@@ -223,8 +232,7 @@ exports.protect = asyncHandler(async (req, res, next) => {
     }
     // 2) Verification of token
     const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-
-    console.log(decoded);
+    console.log('🚀 ~ exports.protect=asyncHandler ~ decoded:', decoded)
 
     // 3) Check if user still exists
 
@@ -275,7 +283,7 @@ exports.forgotPassword = asyncHandler(async (req, res, next) => {
 
     // 3) Send it to user's email
     try {
-        const resetURL = `${req.protocol}://${req.hostname}:${process.env.PORT}/auth/new-password?token=${resetToken}`;
+        const resetURL = `${process.env.CLIENT_URL}/auth/new-password?token=${resetToken}`;
         // TODO send mail
         const rs = await sendMail({
             email: user.email,

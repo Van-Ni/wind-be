@@ -33,7 +33,10 @@ exports.updateMe = asyncHandler(async (req, res, next) => {
             width: 1200,
             crop: "scale"
         });
-
+        await fs.unlink(file, function (err) {
+            if (err) throw err;
+            console.log('delete');
+        });
         data.avatar = {
             public_id: newImage.public_id,
             url: newImage.secure_url
